@@ -1,0 +1,95 @@
+# GoReleaser configuration for the CrawlSnap CLI.
+# Docs: https://goreleaser.com
+version: 2
+
+project_name: crawlsnap
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: crawlsnap
+    main: .
+    binary: crawlsnap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Inject release metadata into internal/build at link time.
+    ldflags:
+      - -s -w
+      - -X github.com/crawlsnap/crawlsnap-cli/internal/build.Version={{ .Version }}
+      - -X github.com/crawlsnap/crawlsnap-cli/internal/build.Commit={{ .Commit }}
+      - -X github.com/crawlsnap/crawlsnap-cli/internal/build.Date={{ .Date }}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    # Windows users expect zip.
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "Merge pull request"
+
+# Homebrew tap — installs via `brew install crawlsnap/tap/crawlsnap`.
+homebrew_casks:
+  - name: crawlsnap
+    repository:
+      owner: crawlsnap
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    homepage: "https://crawlsnap.com"
+    description: "Official CLI for the CrawlSnap data intelligence platform"
+    # The released binaries are unsigned; strip the macOS quarantine attribute
+    # on install so Gatekeeper does not block the CLI.
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/crawlsnap"]
+          end
+
+# Scoop bucket — installs via `scoop install crawlsnap/crawlsnap` on Windows.
+scoops:
+  - name: crawlsnap
+    repository:
+      owner: crawlsnap
+      name: scoop-bucket
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    homepage: "https://crawlsnap.com"
+    description: "Official CLI for the CrawlSnap data intelligence platform"
+    license: MIT
+
+release:
+  github:
+    owner: crawlsnap
+    name: crawlsnap-cli
+  draft: false
+  prerelease: auto
+  footer: |
+    ---
+    Install via Homebrew, Scoop, or the install script — see the README.

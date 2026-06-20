@@ -1,0 +1,6 @@
+# Go
+/dist/
+/crawlsnap
+*.test
+.env
+.DS_Store
