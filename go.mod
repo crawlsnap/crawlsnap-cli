@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106193318-19329a3e8410
 	github.com/charmbracelet/fang v1.0.0
-	github.com/crawlsnap/crawlsnap-go v0.1.0
+	github.com/crawlsnap/crawlsnap-go v0.2.0
 	github.com/itchyny/gojq v0.12.19
 	github.com/spf13/cobra v1.10.2
 	github.com/zalando/go-keyring v0.2.8

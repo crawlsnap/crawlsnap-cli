@@ -38,11 +38,15 @@ type Card struct {
 	footer   string     // muted hint, e.g. "10 files · 25 resolutions → --full"
 }
 
+// maxValueWidth bounds a row value so a single long field can't blow out the
+// card width. The full value is always available via --full / -o json.
+const maxValueWidth = 72
+
 func (c *Card) addRow(label, value string) {
 	if value == "" {
 		return
 	}
-	c.rows = append(c.rows, cardRow{label, value})
+	c.rows = append(c.rows, cardRow{label, truncate(value, maxValueWidth)})
 }
 
 // renderCards prints one or more cards to stdout.
@@ -69,7 +73,7 @@ func (p *Printer) renderCard(c *Card) string {
 		body.WriteString(p.cardStyle(styTitle).Render(c.title))
 		body.WriteByte('\n')
 	}
-	headLine := p.cardStyle(styHeading).Render(c.heading)
+	headLine := p.cardStyle(styHeading).Render(truncate(c.heading, maxValueWidth))
 	if c.badge != "" {
 		if p.color {
 			headLine += "  " + p.badgeStyle(c.level).Render(" "+c.badge+" ")

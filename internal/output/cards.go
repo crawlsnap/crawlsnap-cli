@@ -94,7 +94,7 @@ func buildIocCard(v map[string]any, kind string) *Card {
 			c.addRow("Size", humanBytes(int64(sz)))
 		}
 		c.addRow("Signature", getStr(v, "signature"))
-		c.addRow("SHA-256", getStr(v, "sha256"))
+		c.addRow("MD5", getStr(v, "md5"))
 	}
 	c.addRow("Tags", joinList(v, "tags", 6))
 	c.addRow("Analyzed", fmtUnixDate(v, "analysis_date"))
