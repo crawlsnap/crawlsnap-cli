@@ -4,3 +4,6 @@
 *.test
 .env
 .DS_Store
+
+# Local maintainer notes (not for distribution)
+/CLAUDE.local.md
