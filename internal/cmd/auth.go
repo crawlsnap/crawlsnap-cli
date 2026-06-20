@@ -106,7 +106,7 @@ func newAuthStatusCmd(f *Factory) *cobra.Command {
 				status["source"] = string(src)
 				status["api_key"] = maskKey(key)
 			}
-			return p.Result(status)
+			return p.Result(status, "")
 		},
 	}
 }

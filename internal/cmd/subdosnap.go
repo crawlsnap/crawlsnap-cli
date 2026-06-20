@@ -36,7 +36,7 @@ func newSubdoSnapCmd(f *Factory) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				return p.Result(data)
+				return p.Result(data, "subdosnap.scan")
 			}
 
 			// --all: stream every page via the SDK iterator into one aggregate.
@@ -58,7 +58,7 @@ func newSubdoSnapCmd(f *Factory) *cobra.Command {
 			return p.Result(models.SubdoSnapScanData{
 				SearchType: "subdomain",
 				Subdomains: subs,
-			})
+			}, "subdosnap.scan")
 		},
 	}
 	scan.Flags().BoolVar(&all, "all", false, "follow the cursor and return every subdomain")

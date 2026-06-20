@@ -81,11 +81,20 @@ crawlsnap vectorsnap domain example.com test.com acme.io
 
 ### Output formats and filtering
 
+By default, results render as a compact **summary card** with a colored verdict
+badge — the key fields at a glance, with large collections collapsed. Use
+`--full` for the complete response, or a machine format for everything:
+
 ```bash
+crawlsnap vectorsnap ip 8.8.8.8                         # summary card (default)
+crawlsnap --full vectorsnap ip 8.8.8.8                  # complete response tree
 crawlsnap -o json vectorsnap ip 8.8.8.8                 # raw JSON (great for jq pipelines)
 crawlsnap -o yaml pulsesnap domain example.com          # YAML
 crawlsnap -q '.reputation' vectorsnap ip 8.8.8.8        # filter with a jq expression
 ```
+
+APIs without a dedicated card (and any new marketplace API) fall back to a
+generic key/value summary, so output stays readable everywhere.
 
 Color is enabled automatically on a terminal and disabled when piped; honor
 `NO_COLOR` or pass `--no-color`. A spinner shows on stderr during requests and
@@ -100,6 +109,7 @@ never corrupts piped stdout.
 | `--base-url` | API host override (staging / self-host) |
 | `-o, --output` | `human` (default), `json`, or `yaml` |
 | `-q, --query` | jq expression applied to the result |
+| `--full` | show the complete response instead of the summary card |
 | `--no-color` | disable colored output |
 | `--quiet` | suppress spinner and status messages |
 | `--timeout` | per-request timeout (default `30s`) |

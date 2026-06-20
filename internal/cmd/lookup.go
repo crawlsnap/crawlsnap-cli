@@ -81,7 +81,7 @@ func newLookupCmd(f *Factory) *cobra.Command {
 				"vectorsnap": resultOrError(vector, vErr),
 				"pulsesnap":  resultOrError(pulse, pErr),
 			}
-			if err := p.Result(result); err != nil {
+			if err := p.Result(result, "lookup"); err != nil {
 				return err
 			}
 			// Surface a non-zero exit only if both products failed.

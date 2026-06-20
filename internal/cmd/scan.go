@@ -16,14 +16,15 @@ import (
 type indicatorRunner func(ctx context.Context, client *crawlsnap.Client, query string) (any, error)
 
 // newIndicatorCmd builds a leaf command that takes one or more indicators (or
-// "-" to read them from stdin) and runs them through run.
-func newIndicatorCmd(f *Factory, use, short, label string, run indicatorRunner) *cobra.Command {
+// "-" to read them from stdin) and runs them through run. view selects the
+// curated summary card (e.g. "vectorsnap.ip").
+func newIndicatorCmd(f *Factory, use, short, label, view string, run indicatorRunner) *cobra.Command {
 	return &cobra.Command{
 		Use:   use + " <indicator>...",
 		Short: short,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
-			return runIndicator(c, f, label, args, run)
+			return runIndicator(c, f, label, view, args, run)
 		},
 	}
 }
@@ -39,7 +40,7 @@ type batchItem struct {
 // result. A single query prints its payload directly; multiple queries print a
 // list of {query, data|error} items and the process still exits non-zero if any
 // failed.
-func runIndicator(cmd *cobra.Command, f *Factory, label string, args []string, run indicatorRunner) error {
+func runIndicator(cmd *cobra.Command, f *Factory, label, view string, args []string, run indicatorRunner) error {
 	p, err := f.Printer()
 	if err != nil {
 		return err
@@ -61,7 +62,7 @@ func runIndicator(cmd *cobra.Command, f *Factory, label string, args []string, r
 		if err != nil {
 			return err
 		}
-		return p.Result(data)
+		return p.Result(data, view)
 	}
 
 	results := make([]batchItem, 0, len(queries))
@@ -81,7 +82,7 @@ func runIndicator(cmd *cobra.Command, f *Factory, label string, args []string, r
 		}
 		results = append(results, item)
 	}
-	if err := p.Result(results); err != nil {
+	if err := p.Result(results, ""); err != nil {
 		return err
 	}
 	return firstErr

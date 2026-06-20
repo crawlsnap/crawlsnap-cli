@@ -16,15 +16,15 @@ func newVectorSnapCmd(f *Factory) *cobra.Command {
 		Short:   "IoC reputation enrichment (url, hash, ip, domain)",
 	}
 	cmd.AddCommand(
-		newIndicatorCmd(f, "ip", "Reputation for an IP address", "VectorSnap",
+		newIndicatorCmd(f, "ip", "Reputation for an IP address", "VectorSnap", "vectorsnap.ip",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) { return c.VectorSnap.IP(ctx, q) }),
-		newIndicatorCmd(f, "domain", "Reputation for a domain", "VectorSnap",
+		newIndicatorCmd(f, "domain", "Reputation for a domain", "VectorSnap", "vectorsnap.domain",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) {
 				return c.VectorSnap.Domain(ctx, q)
 			}),
-		newIndicatorCmd(f, "url", "Reputation for a URL", "VectorSnap",
+		newIndicatorCmd(f, "url", "Reputation for a URL", "VectorSnap", "vectorsnap.url",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) { return c.VectorSnap.URL(ctx, q) }),
-		newIndicatorCmd(f, "hash", "Reputation for a file hash", "VectorSnap",
+		newIndicatorCmd(f, "hash", "Reputation for a file hash", "VectorSnap", "vectorsnap.hash",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) {
 				return c.VectorSnap.Hash(ctx, q)
 			}),
@@ -41,15 +41,15 @@ func newPulseSnapCmd(f *Factory) *cobra.Command {
 		Short:   "Threat-intelligence pulse enrichment (url, hash, ip, domain)",
 	}
 	cmd.AddCommand(
-		newIndicatorCmd(f, "ip", "Pulse enrichment for an IP address", "PulseSnap",
+		newIndicatorCmd(f, "ip", "Pulse enrichment for an IP address", "PulseSnap", "pulsesnap.ip",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) { return c.PulseSnap.IP(ctx, q) }),
-		newIndicatorCmd(f, "domain", "Pulse enrichment for a domain", "PulseSnap",
+		newIndicatorCmd(f, "domain", "Pulse enrichment for a domain", "PulseSnap", "pulsesnap.domain",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) {
 				return c.PulseSnap.Domain(ctx, q)
 			}),
-		newIndicatorCmd(f, "url", "Pulse enrichment for a URL", "PulseSnap",
+		newIndicatorCmd(f, "url", "Pulse enrichment for a URL", "PulseSnap", "pulsesnap.url",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) { return c.PulseSnap.URL(ctx, q) }),
-		newIndicatorCmd(f, "hash", "Pulse enrichment for a file hash", "PulseSnap",
+		newIndicatorCmd(f, "hash", "Pulse enrichment for a file hash", "PulseSnap", "pulsesnap.hash",
 			func(ctx context.Context, c *crawlsnap.Client, q string) (any, error) { return c.PulseSnap.Hash(ctx, q) }),
 	)
 	return cmd

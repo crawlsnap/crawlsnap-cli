@@ -55,6 +55,7 @@ func newRootCmd() *cobra.Command {
 	pf.StringVarP(&f.QueryFlag, "query", "q", "", "jq expression to filter the result")
 	pf.BoolVar(&f.NoColor, "no-color", false, "disable colored output")
 	pf.BoolVar(&f.Quiet, "quiet", false, "suppress spinner and status messages")
+	pf.BoolVar(&f.Full, "full", false, "show the complete response instead of a summary card")
 	pf.DurationVar(&f.Timeout, "timeout", 30*time.Second, "per-request timeout")
 
 	cmd.AddCommand(

@@ -42,6 +42,7 @@ type Options struct {
 	Query   string // optional jq expression applied to result data
 	NoColor bool
 	Quiet   bool // suppress spinner and status messages
+	Full    bool // render the full data tree instead of a curated card
 }
 
 // Printer renders results and status to the given writers.
@@ -69,8 +70,10 @@ func isTerminal(w io.Writer) bool {
 }
 
 // Result renders the command's payload. data is any JSON-serializable value
-// (typically an SDK response struct). When a query is set it is applied first.
-func (p *Printer) Result(data any) error {
+// (typically an SDK response struct). view names a curated card renderer
+// (e.g. "vectorsnap.ip"); pass "" for none. When a query is set it is applied
+// first and curated cards are skipped (the shape no longer matches).
+func (p *Printer) Result(data any, view string) error {
 	v, err := toGeneric(data)
 	if err != nil {
 		return err
@@ -87,6 +90,13 @@ func (p *Printer) Result(data any) error {
 	case FormatYAML:
 		return p.writeYAML(v)
 	default:
+		// Curated card when one exists for this view and the user has not asked
+		// for the full tree or applied a query.
+		if view != "" && !p.opts.Full && p.opts.Query == "" && hasCard(view) {
+			if cards := cardBuilders[view](v); len(cards) > 0 {
+				return p.renderCards(cards)
+			}
+		}
 		return p.writeHuman(v)
 	}
 }

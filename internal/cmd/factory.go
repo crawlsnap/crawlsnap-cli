@@ -26,6 +26,7 @@ type Factory struct {
 	QueryFlag   string
 	NoColor     bool
 	Quiet       bool
+	Full        bool
 	Timeout     time.Duration
 
 	cfg *config.Config
@@ -71,6 +72,7 @@ func (f *Factory) Printer() (*output.Printer, error) {
 		Query:   f.QueryFlag,
 		NoColor: f.NoColor,
 		Quiet:   f.Quiet,
+		Full:    f.Full,
 	}), nil
 }
 
