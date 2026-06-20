@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -44,6 +45,15 @@ func newRootCmd() *cobra.Command {
 		PersistentPreRunE: func(c *cobra.Command, _ []string) error {
 			_, err := output.ParseFormat(f.OutputFlag)
 			return err
+		},
+		// Bare `crawlsnap` shows the banner; anything else here is an unknown
+		// command (a known subcommand would have been dispatched instead).
+		RunE: func(c *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				printBanner(c.OutOrStdout(), bannerColorEnabled(f))
+				return nil
+			}
+			return fmt.Errorf("unknown command %q for %q\nRun 'crawlsnap --help' for usage", args[0], c.CommandPath())
 		},
 	}
 
