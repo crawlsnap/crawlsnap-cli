@@ -68,7 +68,13 @@ crawlsnap subdosnap scan example.com --all    # follow the cursor, return all
 # lookup — auto-detect the indicator type and query every product
 crawlsnap lookup 8.8.8.8
 crawlsnap lookup example.com
+crawlsnap --products vectorsnap lookup 8.8.8.8   # query only specific products
 ```
+
+`lookup` queries every product by default. The public API has no entitlement
+endpoint, so a product you are not subscribed to is reported as **skipped**
+rather than failing. Each successful product call consumes credits — use
+`--products` to restrict which products are queried.
 
 ### Batch input
 

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -44,17 +45,29 @@ func detectIndicator(s string) indicatorKind {
 	}
 }
 
+// allLookupProducts lists the products lookup can query, in display order.
+var allLookupProducts = []string{"vectorsnap", "pulsesnap"}
+
 // newLookupCmd builds the smart `lookup` command: it detects the indicator type
-// and enriches it across VectorSnap and PulseSnap in one shot.
+// and enriches it across the selected products in one shot.
 func newLookupCmd(f *Factory) *cobra.Command {
-	return &cobra.Command{
+	var products []string
+
+	cmd := &cobra.Command{
 		Use:   "lookup <indicator>",
 		Short: "Auto-detect an indicator and enrich it across products",
 		Long: "lookup detects whether the indicator is an ip, domain, url, or hash and\n" +
-			"queries both VectorSnap (reputation) and PulseSnap (threat-intel pulse),\n" +
-			"returning both results together.",
+			"queries the selected products, returning their results together.\n\n" +
+			"By default it queries every product (--products). The public API has no\n" +
+			"entitlement endpoint, so a product you are not subscribed to is reported as\n" +
+			"\"skipped\" rather than failing. Each successful product call consumes credits;\n" +
+			"restrict with --products to avoid spending on products you do not need.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
+			selected, err := parseProducts(products)
+			if err != nil {
+				return err
+			}
 			p, err := f.Printer()
 			if err != nil {
 				return err
@@ -71,26 +84,75 @@ func newLookupCmd(f *Factory) *cobra.Command {
 			ctx := c.Context()
 
 			stop := p.Spinner(fmt.Sprintf("Looking up %s (%s)…", indicator, kind))
-			vector, vErr := vectorLookup(ctx, client, kind, indicator)
-			pulse, pErr := pulseLookup(ctx, client, kind, indicator)
+			result := map[string]any{"indicator": indicator, "kind": string(kind)}
+			var firstErr error
+			success := 0
+			for _, prod := range allLookupProducts {
+				if !selected[prod] {
+					continue
+				}
+				var data any
+				var callErr error
+				switch prod {
+				case "vectorsnap":
+					data, callErr = vectorLookup(ctx, client, kind, indicator)
+				case "pulsesnap":
+					data, callErr = pulseLookup(ctx, client, kind, indicator)
+				}
+				display, real := classifyOutcome(data, callErr)
+				result[prod] = display
+				if callErr == nil {
+					success++
+				}
+				if firstErr == nil && callErr != nil {
+					firstErr = real // prefer a real error; subscription "skips" leave this nil
+				}
+			}
 			stop()
 
-			result := map[string]any{
-				"indicator":  indicator,
-				"kind":       string(kind),
-				"vectorsnap": resultOrError(vector, vErr),
-				"pulsesnap":  resultOrError(pulse, pErr),
-			}
 			if err := p.Result(result, "lookup"); err != nil {
 				return err
 			}
-			// Surface a non-zero exit only if both products failed.
-			if vErr != nil && pErr != nil {
-				return vErr
+			// Non-zero exit only when nothing succeeded.
+			if success == 0 && firstErr != nil {
+				return firstErr
 			}
 			return nil
 		},
 	}
+	cmd.Flags().StringSliceVar(&products, "products", allLookupProducts,
+		"products to query (vectorsnap, pulsesnap)")
+	return cmd
+}
+
+// parseProducts validates the --products selection into a set.
+func parseProducts(in []string) (map[string]bool, error) {
+	valid := map[string]bool{"vectorsnap": true, "pulsesnap": true}
+	out := map[string]bool{}
+	for _, p := range in {
+		p = strings.ToLower(strings.TrimSpace(p))
+		if !valid[p] {
+			return nil, fmt.Errorf("unknown product %q (valid: vectorsnap, pulsesnap)", p)
+		}
+		out[p] = true
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("no products selected")
+	}
+	return out, nil
+}
+
+// classifyOutcome shapes a per-product result. A "not subscribed" (403) is a
+// soft skip, not a failure; other errors are surfaced and counted.
+func classifyOutcome(data any, err error) (display any, real error) {
+	if err == nil {
+		return data, nil
+	}
+	var sub *crawlsnap.SubscriptionInactiveError
+	if errors.As(err, &sub) {
+		return map[string]any{"skipped": "not subscribed to this product"}, nil
+	}
+	return map[string]any{"error": err.Error()}, err
 }
 
 // vectorLookup runs the VectorSnap method matching the detected kind.
